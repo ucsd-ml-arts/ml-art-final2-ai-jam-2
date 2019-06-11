@@ -24,6 +24,7 @@ class App extends Component {
       melodyPresent: false,
       aiMelodyPresent: false
     }
+    this.interfaceRef = React.createRef();
   }
   componentDidMount() {
     this.melodyModel = new MelodyModel();
@@ -216,6 +217,9 @@ class App extends Component {
       case 113:
         if (e.value) {
           // Generate New Melody
+          if(this.melodyNotes.length){
+            this.notes = this.melodyNotes
+          }
           if (this.aiNotes.length) {
             this.notes = this.aiNotes;
           }
@@ -347,11 +351,15 @@ class App extends Component {
     Tone.Transport.start();
     Tone.Transport.position = 0;
 
-    this.loop = Tone.Transport.schedule(time=>{
-      Tone.Transport.setLoopPoints(0, "2m");
-      Tone.Transport.loop = true;  
-      Tone.Transport.stop();
-      this.playRecording();
+    this.loop = Tone.Transport.scheduleRepeat(time=>{
+      if(this.notes.length){
+        Tone.Transport.clear(this.loop);
+        Tone.Transport.setLoopPoints(0, "2m");
+        Tone.Transport.loop = true;  
+        Tone.Transport.stop();
+        this.playRecording();
+
+      }
     }, "2m")
 
   }
@@ -509,6 +517,15 @@ class App extends Component {
       this.melodySynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
       this.melodySynth.volume.value = value.gain;
     }, this.notes);
+    this.melodySaveLoop = Tone.Transport.scheduleRepeat(time => {
+      if (this.melodySave) {
+        this.melody.stop();
+        this.playMelody();
+        this.melodySave = false;
+      } else {
+        this.notes = [];
+      }
+    }, "0")
     this.melody.start(0);
     Tone.Transport.start();
   }

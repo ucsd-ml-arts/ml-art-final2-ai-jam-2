@@ -3,11 +3,37 @@
     flex-direction: column;
     height: 100vh;
     align-items: center;
+    /* width: 100vw; */
 }
+
+.title {
+    display: flex;
+    /* position: absolute; */
+    /* border: 2px solid black; */
+    /* top: 0%; */
+    /* left: 50%; */
+    /* transform: translateX(-50%); */
+    justify-content: center;
+    background-color: white;
+    /* border: 2px solid red; */
+    z-index: 5;
+    width: 100%;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.patch-container {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+
+}
+
 .bassline {
     background-color: blue;
-    width: 99%;
-    padding: 2px;
+    width: 100%;
+    /* padding: 2px; */
     color: white;
     border-radius: 15px;
     flex: 1;
@@ -18,8 +44,8 @@
 
 .drums-container {
     background-color: red;
-    width: 99%;
-    padding: 2px;
+    width: 100%;
+    /* padding: 2px; */
     color: white;
     border-radius: 15px;
     flex: 1;
@@ -35,15 +61,13 @@
 
 .drums-temperature-color {
     margin-left: 5px;
-    color: yellow;
+    color: black;
 }
 
 .melody-container {
     background-color: pink;
-    width: 99%;
-    padding: 2px;
+    width: 100%;
     color: white;
-    border-radius: 15px;
     flex: 1;
     display: flex;
     justify-content: center;
@@ -54,8 +78,8 @@
 
 .ai-melody-container {
     background-color: orange;
-    width: 99%;
-    padding: 2px;
+    width: 100%;
+    /* padding: 2px; */
     color: white;
     border-radius: 15px;
     flex: 1;
@@ -72,7 +96,7 @@
 
 .ai-melody-temperature-color {
     margin-left: 5px;
-    color: purple;
+    color: black;
 }
 
 .status {
@@ -87,4 +111,6 @@
     /* width: 10%; */
     height: 10%;
     color: white;
+    z-index: 10;;
 }
+
