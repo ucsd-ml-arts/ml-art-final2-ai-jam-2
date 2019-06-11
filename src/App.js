@@ -28,19 +28,25 @@ class App extends Component {
     this.drumModel = new Model();
     this.drumModel.load().then(() => {
       this.melodyModel.load().then(()=>{
-      this.setState({status: "Model Loaded. Waiting for input..."});
+      this.setState({status: "Models Loaded. Waiting for input..."});
     // this.synth = new Tone.Synth({oscillator:{type:"fatsquare"}});
     // this.synth.connect(Tone.Master);
     this.reverb = new Tone.Reverb(10);
     this.reverb.generate().then(() => {
       this.reverb.connect(Tone.Master);
     });
-    this.synth = new Tone.PolySynth(6);//{oscillator:{type:"fatsquare"}});
+    // this.synth = new Tone.PolySynth(6);//{oscillator:{type:"fatsquare"}});
+    // // this.synth.connect(this.reverb);
+    // let vibrato = new Tone.Vibrato(4, 0.25);
+    // vibrato.connect(this.reverb);
+    // vibrato.connect(Tone.Master)
+    // this.synth.connect(vibrato);    
+    // this.synth.set({"oscillator": {"type": "fatsquare"}});
+    this.synth = new Tone.FMSynth({modulationIndex: 15,modulationEnvelope: {attack:0.1, decay: 0.1}});
+    this.synth.connect(Tone.Master);
     this.synth.connect(this.reverb);
-    this.synth.connect(Tone.Master);    
-    this.synth.set({"oscillator": {"type": "fatsquare"}});
 
-    this.basslineSynth = new Tone.Synth({oscillator:{type:"fatsawtooth"}});
+    this.basslineSynth = new Tone.FMSynth({modulationIndex: 15,modulationEnvelope: {attack:0.1, decay: 0.1}});
     this.basslineSynth.connect(Tone.Master);
     this.basslineSynth.connect(this.reverb);
 
@@ -49,10 +55,13 @@ class App extends Component {
     this.melodySynth.connect(Tone.Master);
     this.melodySynth.connect(this.reverb);
     
-
-    this.aiSynth = new Tone.Synth({oscillator:{type:"fmsawtooth"}});
-    this.aiSynth.connect(Tone.Master);
-    this.aiSynth.connect(this.reverb);
+    let aiVibrato = new Tone.Vibrato(4, 0.25);
+    aiVibrato.connect(this.reverb);
+    aiVibrato.connect(Tone.Master)
+    this.aiSynth = new Tone.Synth({oscillator:{type:"amsawtooth"}});
+    this.aiSynth.connect(aiVibrato)
+    // this.aiSynth.connect(Tone.Master);
+    // this.aiSynth.connect(this.reverb);
 
     this.metroPlayer = new Tone.Player({url: "./metronome.mp3"})
     this.metroVolume = new Tone.Volume(-5);
@@ -95,6 +104,7 @@ class App extends Component {
     this.start = false;
     this.firstDrumsGeneration = true;
     this.drumAdds = false;
+    this.changeSynth = false;
 
     WebMidi.enable((err)=>{
       if (err) {
@@ -140,8 +150,12 @@ class App extends Component {
   }
 
   onNoteUp=ev=>{
-    let freq = this.midiToFreq(ev.note.number);
-    this.synth.triggerRelease(freq);  
+    if(this.changeSynth){
+      let freq = this.midiToFreq(ev.note.number);
+      this.synth.triggerRelease(freq);        
+    } else {
+      this.synth.triggerRelease();
+    }
 
     let endTime = new Tone.Time(Tone.Transport.position).quantize("16n");
     let startTime = new Tone.Time(this.startTime).toSeconds();
@@ -213,7 +227,12 @@ class App extends Component {
             this.notes = this.melodyNotes
           }
           if (this.aiNotes.length) {
-            this.notes = this.aiNotes;
+            this.notes = this.aiNotes.map(note=>{
+              return {
+                ...note, 
+                pitch:note.pitch-12
+              }
+              });
           }
           this.recording = false;
           Tone.Transport.stop();
@@ -233,9 +252,10 @@ class App extends Component {
               let startTime = new Tone.Time(note.startTime).toBarsBeatsSixteenths();
               if(timeDelta === 0){
                 timeDelta = 0.25;
-              }
+              }              
               return {
                 ...note,
+                pitch: note.pitch+12,
                 time: startTime,
                 duration: timeDelta,
                 gain: -1 * Math.random()*10
@@ -271,17 +291,21 @@ class App extends Component {
           this.kickAdd = false;
           this.drumAdds = false;
           this.firstDrumsGeneration= true;
+          this.changeSynth = false;
           this.notes = [];
           this.bassline = [];
           this.melodyNotes = [];
           this.aiNotes = [];
-
+          this.synth = new Tone.FMSynth({modulationIndex: 15,modulationEnvelope: {attack:0.1, decay: 0.1}});
+          this.synth.connect(Tone.Master);
+          this.synth.connect(this.reverb);
 
         }
         break;
       case 116:
         if(e.value){
           // Drums Generation
+          this.kickAdd = false;
           if(this.firstDrumsGeneration){
             this.bassline = this.notes;
             this.firstDrumsGeneration = false;
@@ -308,6 +332,17 @@ class App extends Component {
           }, "4n");
 
           this.createSequence(false).then(out=>{
+            this.changeSynth = true;
+            // this.synth.disconnect(Tone.Master);
+            // this.synth.disconnect(this.reverb);
+            this.synth = new Tone.PolySynth(6);//{oscillator:{type:"fatsquare"}});
+            // this.synth.connect(this.reverb);
+            let vibrato = new Tone.Vibrato(4, 0.25);
+            vibrato.connect(this.reverb);
+            vibrato.connect(Tone.Master)
+            this.synth.connect(vibrato);    
+            this.synth.set({"oscillator": {"type": "fatsquare"}});
+
             console.log(out.notes)
             this.drumNotes = out.notes;
             this.setState({drumsPresent: true, status: "Playing Drums with Sequence"});
@@ -343,7 +378,7 @@ class App extends Component {
 
     this.loop = Tone.Transport.scheduleRepeat(time=>{
       if(this.notes.length){
-        Tone.Transport.clear(this.loop);
+        Tone.Transport.cancel();
         Tone.Transport.setLoopPoints(0, "2m");
         Tone.Transport.loop = true;  
         Tone.Transport.stop();
@@ -359,6 +394,11 @@ class App extends Component {
       this.basslineSynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
       this.basslineSynth.volume.value = value.gain;
     }, this.notes);
+    this.metro = Tone.Transport.scheduleRepeat(time => {
+      if (this.metroPlayer.loaded) {
+        this.metroPlayer.start(time);
+      }
+    }, "4n");
     this.part.start(0);
     Tone.Transport.start();
     Tone.Transport.position = 0;

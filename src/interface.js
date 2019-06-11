@@ -13,7 +13,7 @@ export default class Interface extends Component {
                     {this.props.drums && (
                     <div className="drums-container">
                         <div className="drums-title">Drums</div>
-                        <div className="drums-temperature">Temperature: <div className="drums-temperature-color">{this.props.drumTemperature}</div></div>
+                        <div className="drums-temperature">Temperature: <div className="drums-temperature-color">{Math.round(this.props.drumTemperature*10)/10}</div></div>
                     </div>
                     )}
                     {this.props.melody && (
@@ -24,7 +24,7 @@ export default class Interface extends Component {
                 {this.props.aiMelody && (
                     <div className="ai-melody-container">
                         <div className="ai-melody-title">Generated Melody</div>
-                        <div className="ai-melody-temperature">Temperature: <div className="ai-melody-temperature-color">{this.props.melodyTemperature}</div></div>
+                        <div className="ai-melody-temperature">Temperature: <div className="ai-melody-temperature-color">{Math.round(this.props.melodyTemperature*10)/10}</div></div>
                     </div>
                     )}     
                     <div className="status">{this.props.status}</div>
