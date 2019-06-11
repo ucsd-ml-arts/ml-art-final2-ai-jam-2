@@ -15,14 +15,12 @@
  * limitations under the License.
  */
 
-import {
-    reconstructBySize
-} from './shared';
+
 // import { resolve } from 'path';
 // const modelPath = PRODUCTION ? `${process.resourcesPath}/app/` : '.';
 // import * as mm from '@magenta/music';
-import { MusicRNN, data, tf, sequences } from '@magenta/music'
-const { quantizeNoteSequence, unquantizeSequence, clone } = sequences
+import { MusicRNN,sequences } from '@magenta/music'
+const {unquantizeSequence, clone } = sequences
 export class MelodyModel {
     constructor() {
         this.model = new MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn');

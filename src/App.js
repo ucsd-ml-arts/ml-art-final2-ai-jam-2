@@ -3,13 +3,10 @@ import './App.css';
 import { Model } from './DrumifyModel';
 import {MelodyModel} from './MelodyModel';
 import WebMidi from 'webmidi';
-import * as mm from '@magenta/music';
 import Tone from "tone"; 
 
 import Interface from "./interface";
 
-// Better Sounds
-// UI (Show Temperature, Status)
 // More Drums
 
 class App extends Component {
@@ -24,8 +21,8 @@ class App extends Component {
       melodyPresent: false,
       aiMelodyPresent: false
     }
-    this.interfaceRef = React.createRef();
   }
+
   componentDidMount() {
     this.melodyModel = new MelodyModel();
     this.drumModel = new Model();
@@ -136,17 +133,13 @@ class App extends Component {
     this.synth.volume.value = gain;
     this.rawVelocity = e.rawVelocity;
     this.startPosition = Tone.Transport.position;
-    // console.log(this.startPosition)
     this.note = e.note.number;
-    // this.startTime = Tone.Transport.progress*4;
     let quantizeTime = new Tone.Time(this.startPosition).quantize("16n");
     this.startTime = new Tone.Time(quantizeTime).toBarsBeatsSixteenths() ; 
-    // console.log(this.startTime)
     this.gain = gain;
   }
 
   onNoteUp=ev=>{
-    // this.synth.triggerRelease();  
     let freq = this.midiToFreq(ev.note.number);
     this.synth.triggerRelease(freq);  
 
@@ -184,7 +177,7 @@ class App extends Component {
     switch(e.controller.number){
       case 51:
         if (e.value) {
-          // Add/Remove drums
+          // Add/Remove kick
           if(this.kickAdd){
             Tone.Transport.clear(this.kickLoop)
             this.kickAdd = false;
@@ -192,7 +185,6 @@ class App extends Component {
             this.kickAdd = true;
             Tone.Transport.stop();
             this.kickLoop = Tone.Transport.scheduleRepeat(time => {
-              // console.log("hi")
               this.kick.start(time);
               this.kickVolume = this.getGain(1 - 100/ 128);
             }, "4n")
@@ -201,7 +193,7 @@ class App extends Component {
         }
       break;
       case 52:
-        // Record Melody
+        // Add Drums together
         if (e.value) {
           this.drumAdds = !this.drumAdds;
         }
@@ -341,8 +333,6 @@ class App extends Component {
     this.bassline = [];
     this.start = true;
     this.setState({ status: "Recording Bassline..." })
-    // Tone.Transport.setLoopPoints(0, "2m");
-    // Tone.Transport.loop = true;    
     this.metro = Tone.Transport.scheduleRepeat(time => {
       if (this.metroPlayer.loaded) {
         this.metroPlayer.start(time);
@@ -373,7 +363,6 @@ class App extends Component {
     Tone.Transport.start();
     Tone.Transport.position = 0;
     this.setState({basslinePresent: true, status: "Looping Bassline"});
-    // console.log(this.notes)
   }
 
   async createSequence(melody){
@@ -530,24 +519,16 @@ class App extends Component {
     Tone.Transport.start();
   }
 
-
-  playDrums(notes){
-    let player = new mm.Player();
-    // let player = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
-    player.start(notes)
-  
-    // console.log(this.player)
-  }
-
   midiToFreq(midi) {
     return Math.pow(2, ((midi - 69) / 12)) * 440;
   }
 
   getGain(index) {
     //1 t0 0 ->
-    //-30 to 0dB
+    //-10 to 0dB
     return -1 * (index * 10);
   }
+
   render(){
     return (
       <div className="App">
