@@ -51,6 +51,7 @@ export class Model {
 		} catch (e){
             console.log(e);
 		}
+		
 	}
 
 	// async drumify(seq){}

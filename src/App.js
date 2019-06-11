@@ -10,13 +10,13 @@ import Interface from "./interface";
 
 // Better Sounds
 // UI (Show Temperature, Status)
-// Put back in original melody
+// More Drums
 
 class App extends Component {
   constructor(){
     super();
     this.state = {
-      mode: 'Input',
+      status: 'Loading Models...',
       melodyTemperature: 1.1,
       drumTemperature: 1.1,
       basslinePresent: false,
@@ -30,8 +30,7 @@ class App extends Component {
     this.drumModel = new Model();
     this.drumModel.load().then(() => {
       this.melodyModel.load().then(()=>{
-      // setStatus('')
-
+      this.setState({status: "Model Loaded. Waiting for input..."});
     // this.synth = new Tone.Synth({oscillator:{type:"fatsquare"}});
     // this.synth.connect(Tone.Master);
     this.reverb = new Tone.Reverb(10);
@@ -92,6 +91,7 @@ class App extends Component {
     this.notes = [];
     this.kickAdd = false;
     this.bassline = [];
+    this.melodyNotes = [];
     this.aiNotes = [];
     this.recording = false;
     this.start = false;
@@ -118,6 +118,9 @@ class App extends Component {
   }
 
   onNoteDown=e=>{
+    if(Tone.Transport.state === "stopped"){
+      this.setState({status: "Input"});
+    }
     if(this.recording){
       if(this.start){
         this.start = false;
@@ -225,10 +228,10 @@ class App extends Component {
           if (newMelodyTemperature < 0.2) {
             newMelodyTemperature = 1.1;
           }
-          this.setState({mode: "Generating New Melody", melodyTemperatue: newMelodyTemperature})
+          this.setState({status: "Generating New Melody", melodyTemperature: newMelodyTemperature})
           this.createSequence(true).then(out=>{
             console.log(out.notes)
-            this.setState({aiMelodyPresent: true})
+            this.setState({aiMelodyPresent: true, status: "Looping All Elements"})
             this.aiNotes = out.notes.map(note=>{
               let timeDelta = note.endTime - note.startTime;
               let startTime = new Tone.Time(note.startTime).toBarsBeatsSixteenths();
@@ -258,7 +261,7 @@ class App extends Component {
           if(this.part) this.part.stop();
           if(this.basslinePart) this.basslinePart.stop();
           this.setState({
-            mode: 'Input',
+            status: 'Input',
             melodyTemperature: 1.1,
             drumTemperature: 1.1,
             basslinePresent: false,
@@ -274,7 +277,9 @@ class App extends Component {
           this.firstDrumsGeneration= true;
           this.notes = [];
           this.bassline = [];
+          this.melodyNotes = [];
           this.aiNotes = [];
+
 
         }
         break;
@@ -285,7 +290,11 @@ class App extends Component {
             this.bassline = this.notes;
             this.firstDrumsGeneration = false;
           }
-
+          let newDrumTemperature = this.state.drumTemperature - 0.1;
+          if (newDrumTemperature < 0.2) {
+            newDrumTemperature = 1.1;
+          }
+          this.setState({status: "Generating Drums...", drumTemperature: newDrumTemperature});
           if(this.bassline.length){
             this.notes = this.bassline;
           }
@@ -301,21 +310,13 @@ class App extends Component {
               this.metroPlayer.start(time);
             }
           }, "4n");
-          let newDrumTemperature = this.state.drumTemperature - 0.1;
-          if (newDrumTemperature < 0.2) {
-            newDrumTemperature = 1.1;
-          }
-          this.setState({mode: "Training", drumTemperature: newDrumTemperature});
+
           this.createSequence(false).then(out=>{
             console.log(out.notes)
             this.drumNotes = out.notes;
-            this.setState({drumsPresent: true});
+            this.setState({drumsPresent: true, status: "Playing Drums with Sequence"});
             this.playDrumsAndSequence(false);
           });
-          this.drumTemperature = this.drumTemperature - 0.1;
-          if(this.drumTemperature < 0.2){
-            this.drumTemperature = 1.1;
-          }
         }
         break;
       case 117:
@@ -335,7 +336,7 @@ class App extends Component {
     this.notes = [];
     this.bassline = [];
     this.start = true;
-    this.setState({ mode: "Recording" })
+    this.setState({ status: "Recording Bassline..." })
     // Tone.Transport.setLoopPoints(0, "2m");
     // Tone.Transport.loop = true;    
     this.metro = Tone.Transport.scheduleRepeat(time => {
@@ -363,7 +364,7 @@ class App extends Component {
     this.part.start(0);
     Tone.Transport.start();
     Tone.Transport.position = 0;
-    this.setState({basslinePresent: true});
+    this.setState({basslinePresent: true, status: "Looping Bassline"});
     // console.log(this.notes)
   }
 
@@ -387,7 +388,7 @@ class App extends Component {
     if (melody){
       return await this.melodyModel.predict(sequence, this.state.melodyTemperature)
     }
-    return await this.drumModel.drumify(sequence, this.drumTemperature);
+    return await this.drumModel.drumify(sequence, this.state.drumTemperature);
   }
 
   playDrumsAndSequence(ai){
@@ -402,7 +403,14 @@ class App extends Component {
           this.aiSynth.volume.value = value.gain;
         }, this.aiNotes);
         this.aiPart.start(0);
+
+        this.melody = new Tone.Part((time, value) => {
+          this.melodySynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
+          this.melodySynth.volume.value = value.gain;
+        }, this.melodyNotes);
+        this.melody.start(0);
       }
+      
     this.drumNotes.forEach(note => {
       if(note.startTime > 4){
         note.startTime = note.startTime - 2;
@@ -493,9 +501,10 @@ class App extends Component {
   }
 
   playMelody(){
-    this.setState({melodyPresent: true});
+    this.setState({melodyPresent: true, status: "Looping Melody"});
     Tone.Transport.stop();
     Tone.Transport.clear(this.melodySaveLoop);
+    this.melodyNotes = this.notes;
     this.melody = new Tone.Part((time, value) => {
       this.melodySynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
       this.melodySynth.volume.value = value.gain;
@@ -526,7 +535,7 @@ class App extends Component {
     return (
       <div className="App">
         <Interface
-        mode={this.state.mode}
+        status={this.state.status}
         drumTemperature={this.state.drumTemperature}
         melodyTemperature={this.state.melodyTemperature}
         drums={this.state.drumsPresent}

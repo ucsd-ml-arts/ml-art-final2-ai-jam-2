@@ -30,7 +30,8 @@ export class MelodyModel {
 	}
 	
 	async load(){
-        this.model.initialize();
+		await this.model.initialize();
+		
 	}
 
 

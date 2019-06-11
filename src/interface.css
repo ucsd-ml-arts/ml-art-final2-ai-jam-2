@@ -1,0 +1,90 @@
+.interface-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+}
+.bassline {
+    background-color: blue;
+    width: 99%;
+    padding: 2px;
+    color: white;
+    border-radius: 15px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.drums-container {
+    background-color: red;
+    width: 99%;
+    padding: 2px;
+    color: white;
+    border-radius: 15px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.drums-temperature {
+    display: flex; 
+}
+
+.drums-temperature-color {
+    margin-left: 5px;
+    color: yellow;
+}
+
+.melody-container {
+    background-color: pink;
+    width: 99%;
+    padding: 2px;
+    color: white;
+    border-radius: 15px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+}
+
+.ai-melody-container {
+    background-color: orange;
+    width: 99%;
+    padding: 2px;
+    color: white;
+    border-radius: 15px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+}
+
+.ai-melody-temperature {
+    display: flex;
+}
+
+.ai-melody-temperature-color {
+    margin-left: 5px;
+    color: purple;
+}
+
+.status {
+    position: absolute;
+    background-color: grey;
+    left: 0;
+    top:0;
+    padding: 2%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* width: 10%; */
+    height: 10%;
+    color: white;
+}
