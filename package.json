@@ -3,9 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/runtime": "^7.4.5",
+    "@magenta/music": "^1.8.0",
+    "@tonejs/midi": "^2.0.0",
+    "file-saver": "^2.0.2",
+    "file-system": "^2.2.2",
+    "fs": "0.0.1-security",
+    "midi-writer-js": "^1.7.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1"
+    "react-scripts": "3.0.1",
+    "tone": "^13.4.9",
+    "webmidi": "^2.3.3"
   },
   "scripts": {
     "start": "react-scripts start",
