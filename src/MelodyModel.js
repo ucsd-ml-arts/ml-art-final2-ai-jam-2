@@ -26,9 +26,12 @@ const { quantizeNoteSequence, unquantizeSequence, clone } = sequences
 export class MelodyModel {
     constructor() {
         this.model = new MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn');
-        this.model.initialize();
 
-    }
+	}
+	
+	async load(){
+        this.model.initialize();
+	}
 
 
 	async predict(inSequence, temp = 1, steps = 32, variations = 1) {

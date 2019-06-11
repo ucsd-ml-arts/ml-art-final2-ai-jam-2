@@ -4,8 +4,9 @@ import { Model } from './DrumifyModel';
 import {MelodyModel} from './MelodyModel';
 import WebMidi from 'webmidi';
 import * as mm from '@magenta/music';
-
 import Tone from "tone"; 
+
+import Interface from "./interface";
 
 // Better Sounds
 // UI (Show Temperature, Status)
@@ -15,29 +16,47 @@ class App extends Component {
   constructor(){
     super();
     this.state = {
-      mode: 'Input'
+      mode: 'Input',
+      melodyTemperature: 1.1,
+      drumTemperature: 1.1,
+      basslinePresent: false,
+      drumsPresent: false,
+      melodyPresent: false,
+      aiMelodyPresent: false
     }
   }
   componentDidMount() {
     this.melodyModel = new MelodyModel();
     this.drumModel = new Model();
     this.drumModel.load().then(() => {
+      this.melodyModel.load().then(()=>{
       // setStatus('')
 
     // this.synth = new Tone.Synth({oscillator:{type:"fatsquare"}});
     // this.synth.connect(Tone.Master);
+    this.reverb = new Tone.Reverb(10);
+    this.reverb.generate().then(() => {
+      this.reverb.connect(Tone.Master);
+    });
     this.synth = new Tone.PolySynth(6);//{oscillator:{type:"fatsquare"}});
+    this.synth.connect(this.reverb);
     this.synth.connect(Tone.Master);    
+    this.synth.set({"oscillator": {"type": "fatsquare"}});
 
-    this.basslineSynth = new Tone.Synth({oscillator:{type:"fatsquare"}});
+    this.basslineSynth = new Tone.Synth({oscillator:{type:"fatsawtooth"}});
     this.basslineSynth.connect(Tone.Master);
+    this.basslineSynth.connect(this.reverb);
+
 
     this.melodySynth = new Tone.Synth({oscillator:{type:"fatsquare"}});
     this.melodySynth.connect(Tone.Master);
-    // this.basslineSynth.sync();
+    this.melodySynth.connect(this.reverb);
+    
 
-    this.aiSynth = new Tone.Synth({oscillator:{type:"triangle"}});
+    this.aiSynth = new Tone.Synth({oscillator:{type:"fmsawtooth"}});
     this.aiSynth.connect(Tone.Master);
+    this.aiSynth.connect(this.reverb);
+
     this.metroPlayer = new Tone.Player({url: "./metronome.mp3"})
     this.metroVolume = new Tone.Volume(-5);
     this.metroPlayer.chain(this.metroVolume, Tone.Master)      ;
@@ -78,8 +97,6 @@ class App extends Component {
     this.start = false;
     this.firstDrumsGeneration = true;
     this.drumAdds = false;
-    this.drumTemperature = 1.1;
-    this.melodyTemperature = 1.1;
 
     WebMidi.enable((err)=>{
       if (err) {
@@ -95,6 +112,7 @@ class App extends Component {
     });
     this.start = true;
     });
+  });
     Tone.Transport.bpm.value = 120;
 
   }
@@ -203,9 +221,14 @@ class App extends Component {
           Tone.Transport.cancel();
           if (this.part) this.part.stop();
           if (this.basslinePart) this.basslinePart.stop();
-          this.setState({mode: "Generating New Melody"})
+          let newMelodyTemperature = this.state.melodyTemperature - 0.1;
+          if (newMelodyTemperature < 0.2) {
+            newMelodyTemperature = 1.1;
+          }
+          this.setState({mode: "Generating New Melody", melodyTemperatue: newMelodyTemperature})
           this.createSequence(true).then(out=>{
             console.log(out.notes)
+            this.setState({aiMelodyPresent: true})
             this.aiNotes = out.notes.map(note=>{
               let timeDelta = note.endTime - note.startTime;
               let startTime = new Tone.Time(note.startTime).toBarsBeatsSixteenths();
@@ -219,14 +242,9 @@ class App extends Component {
                 gain: -1 * Math.random()*10
               }
             });
-            console.log("MELODY TEMPERATURE:", this.melodyTemperature);
             this.playDrumsAndSequence(true);
           });         
           this.melodyGenerated = true;
-          this.melodyTemperature = this.melodyTemperature - 0.1;
-          if (this.melodyTemperature < 0.2) {
-            this.melodyTemperature = 1.1;
-          }
 
         }        
       break;
@@ -239,7 +257,15 @@ class App extends Component {
           Tone.Transport.loop = false; 
           if(this.part) this.part.stop();
           if(this.basslinePart) this.basslinePart.stop();
-          this.setState({mode: "Stopped"});
+          this.setState({
+            mode: 'Input',
+            melodyTemperature: 1.1,
+            drumTemperature: 1.1,
+            basslinePresent: false,
+            drumsPresent: false,
+            melodyPresent: false,
+            aiMelodyPresent: false
+          });
           Tone.Transport.cancel();
           this.melodyGenerated = false;
           this.melodySave = false;
@@ -249,8 +275,6 @@ class App extends Component {
           this.notes = [];
           this.bassline = [];
           this.aiNotes = [];
-          this.drumTemperature = 1.1;
-          this.melodyTemperature = 1.1;
 
         }
         break;
@@ -272,11 +296,20 @@ class App extends Component {
           if(!this.drumAdds){
             Tone.Transport.cancel();
           }
-          this.setState({mode: "Training"})
+          this.metro = Tone.Transport.scheduleRepeat(time => {
+            if (this.metroPlayer.loaded) {
+              this.metroPlayer.start(time);
+            }
+          }, "4n");
+          let newDrumTemperature = this.state.drumTemperature - 0.1;
+          if (newDrumTemperature < 0.2) {
+            newDrumTemperature = 1.1;
+          }
+          this.setState({mode: "Training", drumTemperature: newDrumTemperature});
           this.createSequence(false).then(out=>{
             console.log(out.notes)
             this.drumNotes = out.notes;
-            console.log("DRUMS TEMPERATURE:", this.drumTemperature);
+            this.setState({drumsPresent: true});
             this.playDrumsAndSequence(false);
           });
           this.drumTemperature = this.drumTemperature - 0.1;
@@ -329,7 +362,8 @@ class App extends Component {
     }, this.notes);
     this.part.start(0);
     Tone.Transport.start();
-    Tone.Transport.position = 0
+    Tone.Transport.position = 0;
+    this.setState({basslinePresent: true});
     // console.log(this.notes)
   }
 
@@ -351,7 +385,7 @@ class App extends Component {
      console.log(this.notes)
     
     if (melody){
-      return await this.melodyModel.predict(sequence, this.melodyTemperature)
+      return await this.melodyModel.predict(sequence, this.state.melodyTemperature)
     }
     return await this.drumModel.drumify(sequence, this.drumTemperature);
   }
@@ -459,6 +493,7 @@ class App extends Component {
   }
 
   playMelody(){
+    this.setState({melodyPresent: true});
     Tone.Transport.stop();
     Tone.Transport.clear(this.melodySaveLoop);
     this.melody = new Tone.Part((time, value) => {
@@ -490,7 +525,15 @@ class App extends Component {
   render(){
     return (
       <div className="App">
-        {this.state.mode}
+        <Interface
+        mode={this.state.mode}
+        drumTemperature={this.state.drumTemperature}
+        melodyTemperature={this.state.melodyTemperature}
+        drums={this.state.drumsPresent}
+        melody={this.state.melodyPresent}
+        aiMelody={this.state.aiMelodyPresent}
+        bassline={this.state.basslinePresent}
+        />
       </div>
     );
   }
