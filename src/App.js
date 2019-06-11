@@ -6,8 +6,11 @@ import WebMidi from 'webmidi';
 import * as mm from '@magenta/music';
 
 import Tone from "tone"; 
-// var fs = require('fs')
-const temp = 0.5;
+
+// Better Sounds
+// UI (Show Temperature, Status)
+// Put back in original melody
+
 class App extends Component {
   constructor(){
     super();
@@ -21,15 +24,17 @@ class App extends Component {
     this.drumModel.load().then(() => {
       // setStatus('')
 
-    this.synth = new Tone.Synth({oscillator:{type:"fatsquare"}});
-    this.synth.connect(Tone.Master);
+    // this.synth = new Tone.Synth({oscillator:{type:"fatsquare"}});
+    // this.synth.connect(Tone.Master);
+    this.synth = new Tone.PolySynth(6);//{oscillator:{type:"fatsquare"}});
+    this.synth.connect(Tone.Master);    
 
-    this.playbackSynth = new Tone.Synth({oscillator:{type:"fatsquare"}});
-    this.playbackSynth.connect(Tone.Master);
+    this.basslineSynth = new Tone.Synth({oscillator:{type:"fatsquare"}});
+    this.basslineSynth.connect(Tone.Master);
 
     this.melodySynth = new Tone.Synth({oscillator:{type:"fatsquare"}});
     this.melodySynth.connect(Tone.Master);
-    // this.playbackSynth.sync();
+    // this.basslineSynth.sync();
 
     this.aiSynth = new Tone.Synth({oscillator:{type:"triangle"}});
     this.aiSynth.connect(Tone.Master);
@@ -67,8 +72,15 @@ class App extends Component {
     this.midTom = new Tone.Player({url: "./mid-tom.wav"}).chain(this.midTomVolume, Tone.Master);     
     this.notes = [];
     this.kickAdd = false;
+    this.bassline = [];
+    this.aiNotes = [];
     this.recording = false;
     this.start = false;
+    this.firstDrumsGeneration = true;
+    this.drumAdds = false;
+    this.drumTemperature = 1.1;
+    this.melodyTemperature = 1.1;
+
     WebMidi.enable((err)=>{
       if (err) {
         console.log("WebMidi could not be enabled.", err);
@@ -111,8 +123,11 @@ class App extends Component {
     this.gain = gain;
   }
 
-  onNoteUp=()=>{
-    this.synth.triggerRelease();
+  onNoteUp=ev=>{
+    // this.synth.triggerRelease();  
+    let freq = this.midiToFreq(ev.note.number);
+    this.synth.triggerRelease(freq);  
+
     let endTime = new Tone.Time(Tone.Transport.position).quantize("16n");
     let startTime = new Tone.Time(this.startTime).toSeconds();
     let timeDelta = endTime - startTime;
@@ -162,7 +177,13 @@ class App extends Component {
             Tone.Transport.start();
           }
         }
-        break;
+      break;
+      case 52:
+        // Record Melody
+        if (e.value) {
+          this.drumAdds = !this.drumAdds;
+        }
+      break;
       case 112:
         // Record Melody
         if (e.value) {
@@ -170,13 +191,18 @@ class App extends Component {
           this.melodySave = true;
         }          
       break;
+      
       case 113:
         if (e.value) {
           // Generate New Melody
+          if (this.aiNotes.length) {
+            this.notes = this.aiNotes;
+          }
           this.recording = false;
           Tone.Transport.stop();
+          Tone.Transport.cancel();
           if (this.part) this.part.stop();
-          if (this.playbackPart) this.playbackPart.stop();
+          if (this.basslinePart) this.basslinePart.stop();
           this.setState({mode: "Generating New Melody"})
           this.createSequence(true).then(out=>{
             console.log(out.notes)
@@ -193,37 +219,70 @@ class App extends Component {
                 gain: -1 * Math.random()*10
               }
             });
+            console.log("MELODY TEMPERATURE:", this.melodyTemperature);
             this.playDrumsAndSequence(true);
           });         
+          this.melodyGenerated = true;
+          this.melodyTemperature = this.melodyTemperature - 0.1;
+          if (this.melodyTemperature < 0.2) {
+            this.melodyTemperature = 1.1;
+          }
+
         }        
       break;
       case 114:
         if(e.value){
+          // Stop
           this.recording = false;
           this.newSequence = false;
           Tone.Transport.stop();
           Tone.Transport.loop = false; 
           if(this.part) this.part.stop();
-          if(this.playbackPart) this.playbackPart.stop();
+          if(this.basslinePart) this.basslinePart.stop();
           this.setState({mode: "Stopped"});
           Tone.Transport.cancel();
+          this.melodyGenerated = false;
+          this.melodySave = false;
+          this.kickAdd = false;
+          this.drumAdds = false;
+          this.firstDrumsGeneration= true;
+          this.notes = [];
+          this.bassline = [];
+          this.aiNotes = [];
+          this.drumTemperature = 1.1;
+          this.melodyTemperature = 1.1;
 
         }
         break;
       case 116:
         if(e.value){
           // Drums Generation
-          this.bassline = this.notes;
+          if(this.firstDrumsGeneration){
+            this.bassline = this.notes;
+            this.firstDrumsGeneration = false;
+          }
+
+          if(this.bassline.length){
+            this.notes = this.bassline;
+          }
           this.recording = false;
           Tone.Transport.stop();
           if (this.part) this.part.stop();
-          if (this.playbackPart) this.playbackPart.stop();
+          if (this.basslinePart) this.basslinePart.stop();
+          if(!this.drumAdds){
+            Tone.Transport.cancel();
+          }
           this.setState({mode: "Training"})
           this.createSequence(false).then(out=>{
             console.log(out.notes)
             this.drumNotes = out.notes;
+            console.log("DRUMS TEMPERATURE:", this.drumTemperature);
             this.playDrumsAndSequence(false);
           });
+          this.drumTemperature = this.drumTemperature - 0.1;
+          if(this.drumTemperature < 0.2){
+            this.drumTemperature = 1.1;
+          }
         }
         break;
       case 117:
@@ -265,8 +324,8 @@ class App extends Component {
 
   playRecording(){
     this.part = new Tone.Part((time, value)=> {
-      this.playbackSynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
-      this.playbackSynth.volume.value = value.gain;
+      this.basslineSynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
+      this.basslineSynth.volume.value = value.gain;
     }, this.notes);
     this.part.start(0);
     Tone.Transport.start();
@@ -289,19 +348,20 @@ class App extends Component {
         totalQuantizedSteps: 32,
         notes: this.notes
      }
+     console.log(this.notes)
     
     if (melody){
-      return await this.melodyModel.predict(sequence)
+      return await this.melodyModel.predict(sequence, this.melodyTemperature)
     }
-    return await this.drumModel.drumify(sequence, 1);
+    return await this.drumModel.drumify(sequence, this.drumTemperature);
   }
 
   playDrumsAndSequence(ai){
-        this.playbackPart = new Tone.Part((time, value) => {
-          this.playbackSynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
-          this.playbackSynth.volume.value = value.gain;
+        this.basslinePart = new Tone.Part((time, value) => {
+          this.basslineSynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
+          this.basslineSynth.volume.value = value.gain;
         }, this.bassline);
-        this.playbackPart.start(0);
+        this.basslinePart.start(0);
        if(this.aiNotes) {
         this.aiPart = new Tone.Part((time, value) => {
           this.aiSynth.triggerAttackRelease(this.midiToFreq(value.pitch), value.duration, time);
@@ -310,10 +370,19 @@ class App extends Component {
         this.aiPart.start(0);
       }
     this.drumNotes.forEach(note => {
-      if(note.startTime || note.endTime > 4){
-        note.startTime = note.startTime - 4;
-        note.endTime = note.endTime - 4;
+      if(note.startTime > 4){
+        note.startTime = note.startTime - 2;
+      } 
+      if (note.startTime < 0) {
+        note.startTime = note.startTime + 2;
       }
+      if(note.endTime > 4){
+        note.endTime = note.endTime - 2;
+      } 
+      if (note.endTime < 0) {
+        note.endTime = note.endTime + 2;
+      }
+      
       switch(note.pitch){
         case 36:
           Tone.Transport.schedule(time=>{
@@ -382,8 +451,9 @@ class App extends Component {
       if(this.melodySave){
         this.playMelody();
         this.melodySave = false;
+      } else {
+        this.notes = [];
       }
-      this.notes = [];
     }, "0")
     Tone.Transport.start();
   }

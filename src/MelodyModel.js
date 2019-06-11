@@ -31,7 +31,7 @@ export class MelodyModel {
     }
 
 
-	async predict(inSequence, steps = 32, temp = 1, variations = 1) {
+	async predict(inSequence, temp = 1, steps = 32, variations = 1) {
 	    const returnSequences = []
 	    for (let i = 0; i < variations; i++) {
             let continuation = await this.model.continueSequence(inSequence, steps, temp)
