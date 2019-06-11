@@ -21,6 +21,7 @@ class App extends Component {
       melodyPresent: false,
       aiMelodyPresent: false
     }
+    this.interfaceRef = React.createRef();
   }
 
   componentDidMount() {
@@ -244,6 +245,12 @@ class App extends Component {
             newMelodyTemperature = 1.1;
           }
           this.setState({status: "Generating New Melody", melodyTemperature: newMelodyTemperature})
+          this.metro = Tone.Transport.scheduleRepeat(time => {
+            if (this.metroPlayer.loaded) {
+              this.metroPlayer.start(time);
+              this.interfaceRef.current.trigger();
+            }
+          }, "4n");
           this.createSequence(true).then(out=>{
             console.log(out.notes)
             this.setState({aiMelodyPresent: true, status: "Looping All Elements"})
@@ -328,6 +335,7 @@ class App extends Component {
           this.metro = Tone.Transport.scheduleRepeat(time => {
             if (this.metroPlayer.loaded) {
               this.metroPlayer.start(time);
+              this.interfaceRef.current.trigger();        
             }
           }, "4n");
 
@@ -371,7 +379,9 @@ class App extends Component {
     this.metro = Tone.Transport.scheduleRepeat(time => {
       if (this.metroPlayer.loaded) {
         this.metroPlayer.start(time);
+        this.interfaceRef.current.trigger();
       }
+      
     }, "4n");
     Tone.Transport.start();
     Tone.Transport.position = 0;
@@ -397,6 +407,7 @@ class App extends Component {
     this.metro = Tone.Transport.scheduleRepeat(time => {
       if (this.metroPlayer.loaded) {
         this.metroPlayer.start(time);
+        this.interfaceRef.current.trigger();
       }
     }, "4n");
     this.part.start(0);
@@ -580,6 +591,7 @@ class App extends Component {
         melody={this.state.melodyPresent}
         aiMelody={this.state.aiMelodyPresent}
         bassline={this.state.basslinePresent}
+        ref = {this.interfaceRef}
         />
       </div>
     );
