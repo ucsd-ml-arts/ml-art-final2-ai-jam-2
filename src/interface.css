@@ -67,6 +67,7 @@
 .melody-container {
     background-color: pink;
     width: 100%;
+    border-radius: 15px;
     color: white;
     flex: 1;
     display: flex;
