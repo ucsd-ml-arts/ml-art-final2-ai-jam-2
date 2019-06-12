@@ -1,6 +1,7 @@
 {
   "name": "ai-jam",
   "version": "0.1.0",
+   "homepage": "https://mhrice.github.io/Ai-Jam-2",
   "private": true,
   "dependencies": {
     "@babel/runtime": "^7.4.5",
@@ -9,6 +10,7 @@
     "file-saver": "^2.0.2",
     "file-system": "^2.2.2",
     "fs": "0.0.1-security",
+    "gh-pages": "^2.0.1",
     "midi-writer-js": "^1.7.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
@@ -20,7 +22,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"
