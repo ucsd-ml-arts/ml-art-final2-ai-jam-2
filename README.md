@@ -8,43 +8,33 @@ For my final project, I will revist the music generation assignment. I would lik
 
 
 ## Project Report
-
-Upload your project report (4 pages) as a pdf with your repository, following this template: [google docs](https://docs.google.com/document/d/133H59WZBmH6MlAgFSskFLMQITeIC5d9b2iuzsOfa4E8/edit?usp=sharing).
+AiJam.pdf
 
 ## Model/Data
 
-Briefly describe the files that are included with your repository:
-- trained models
-- training data (or link to training data)
+There were two models used, both from magenta. 
+[Drums](https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/groovae_2bar_humanize)
+[Melody](https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn)
 
 ## Code
 
-Your code for generating your project:
-- Python: generative_code.py
-- Jupyter notebooks: generative_code.ipynb
+All the code for this project is in the src folder on this repo. The main files are: App.js, interface.js, MelodyModel.js, and DrumifyModel.js.
 
 ## Results
 
-Documentation of your results in an appropriate format, both links to files and a brief description of their contents:
-- What you include here will very much depend on the format of your final project
-  - image files (`.jpg`, `.png` or whatever else is appropriate)
-  - 3d models
-  - movie files (uploaded to youtube or vimeo due to github file size limits)
-  - audio files
-  - ... some other form
+example.wav = Example audio recording of jam. All breaks are for the generation of new drums/melodies. Output website is published at mhrice.github.io/Ai-Jam-2
 
 ## Technical Notes
 
-Any implementation details or notes we need to repeat your work. 
-- Does this code require other pip packages, software, etc?
-- Does it run on some other (non-datahub) platform? (CoLab, etc.)
+This is a JavaScript implementation of my idea. To replicate, you need [npm](https://nodejs.org/en/).
+Then clone this directory and run `npm run install` then `npm run start` to start the dev server.
+However, all of the functionality of the process has been mapped specifically for my MIDI controller (Novation Launchkey 49), and other modifications might need to be made to work with other controllers. 
 
 ## Reference
+Big thanks to the following:
+[Magenta Studio](https://magenta.tensorflow.org/studio/)
+[Magenta.js guide](https://hello-magenta.glitch.me)
+[MIDI Drum Refence](https://www.zendrum.com/resource-site/drumnotes.htm)
+[Web Midi](https://github.com/djipco/webmidi)
+[Tone.js](https://tonejs.github.io)
 
-References to any papers, techniques, repositories you used:
-- Papers
-- Repositories
-- Blog posts
-
-
-(This should be one paragraph clearly describing your concept and approach. What are your desired creative goals? How are you expanding on something we covered in the class? How will you present your work next Wednesday in the final project presentations? )
