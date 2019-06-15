@@ -22,7 +22,7 @@ All the code for this project is in the src folder on this repo. The main files 
 
 ## Results
 
-example.wav = Example audio recording of jam. All breaks are for the generation of new drums/melodies. Output website is published at mhrice.github.io/Ai-Jam-2
+example.wav - Example audio recording of a jam session. All breaks are for the generation of new drums/melodies. Output website is published at mhrice.github.io/Ai-Jam-2
 
 ## Technical Notes
 
