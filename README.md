@@ -36,5 +36,5 @@ Big thanks to the following:
 [Magenta.js guide](https://hello-magenta.glitch.me) \
 [MIDI Drum Refence](https://www.zendrum.com/resource-site/drumnotes.htm) \
 [Web Midi](https://github.com/djipco/webmidi) \
-[Tone.js](https://tonejs.github.io) \
+[Tone.js](https://tonejs.github.io) 
 
