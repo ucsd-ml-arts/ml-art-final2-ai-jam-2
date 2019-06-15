@@ -8,7 +8,7 @@ For my final project, I will revist the music generation assignment. I would lik
 
 
 ## Project Report
-AiJam.pdf
+AI Jam 2 Report.pdf
 
 ## Model/Data
 
