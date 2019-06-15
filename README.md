@@ -12,8 +12,8 @@ AI Jam 2 Report.pdf
 
 ## Model/Data
 
-There were two models used, both from magenta. 
-[Drums](https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/groovae_2bar_humanize)
+There were two models used, both from magenta. \
+[Drums](https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/groovae_2bar_humanize) \
 [Melody](https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn)
 
 ## Code
@@ -32,9 +32,9 @@ However, all of the functionality of the process has been mapped specifically fo
 
 ## Reference
 Big thanks to the following:
-[Magenta Studio](https://magenta.tensorflow.org/studio/)
-[Magenta.js guide](https://hello-magenta.glitch.me)
-[MIDI Drum Refence](https://www.zendrum.com/resource-site/drumnotes.htm)
-[Web Midi](https://github.com/djipco/webmidi)
-[Tone.js](https://tonejs.github.io)
+[Magenta Studio](https://magenta.tensorflow.org/studio/) \
+[Magenta.js guide](https://hello-magenta.glitch.me) \
+[MIDI Drum Refence](https://www.zendrum.com/resource-site/drumnotes.htm) \
+[Web Midi](https://github.com/djipco/webmidi) \
+[Tone.js](https://tonejs.github.io) \
 
