@@ -31,7 +31,7 @@ Then clone this directory and run `npm run install` then `npm run start` to star
 However, all of the functionality of the process has been mapped specifically for my MIDI controller (Novation Launchkey 49), and other modifications might need to be made to work with other controllers. 
 
 ## Reference
-Big thanks to the following:
+Big thanks to the following: \
 [Magenta Studio](https://magenta.tensorflow.org/studio/) \
 [Magenta.js guide](https://hello-magenta.glitch.me) \
 [MIDI Drum Refence](https://www.zendrum.com/resource-site/drumnotes.htm) \
